@@ -16,353 +16,82 @@ board_size = (board_width, board_height)
 board_surface = pygame.transform.scale(board_surface, board_size)
 
 # classes
-class pawn(pygame.sprite.Sprite):
-  
-  def __init__(self, pos, color):
-    super().__init__()
+class ChessPiece(pygame.sprite.Sprite):
+    def __init__(self, pos, color, image_path):
+        super().__init__()
+        self.color = color
+        self.image_orig = pygame.image.load(image_path).convert_alpha()
+        self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
+        self.rect = self.image.get_rect()
+        self.rect.center = pos
+        self.mouse_click = False
+        self.piece_selected = False
 
-    self.color = color
+    def move(self):
+        self.mouse_pos = pygame.mouse.get_pos()
+        self.mouse_buttons = pygame.mouse.get_pressed()
+        self.piece_pos = self.rect.center
+        
+        if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_click:
+            self.mouse_click = True
+            self.piece_selected = True
+        
+        if self.mouse_buttons[0] and self.piece_selected and not self.mouse_click:
+            self.y = ((self.mouse_pos[0] // 100) * 100) + 50
+            self.x = ((self.mouse_pos[1] // 100) * 100) + 50
+            self.rect.center = (self.y, self.x)
+            self.piece_selected = False
+            self.mouse_click = True
+
+        if not self.mouse_buttons[0]:
+            self.mouse_click = False
     
-    if self.color == "black":
-      self.image_orig = pygame.image.load("images/pieces/blackPawn.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-
-    elif self.color == "white":
-      self.image_orig = pygame.image.load("images/pieces/whitePawn.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
+    def highlight_piece(self):
+        if self.piece_selected:
+            pygame.draw.rect(screen, "Green", self.rect, 3)
     
-    self.mouse_click = False
-    self.piece_selected = False
-  
-  def move(self):
-    self.mouse_pos = pygame.mouse.get_pos()
-    self.mouse_buttons = pygame.mouse.get_pressed()
-    self.piece_pos = self.rect.center
+    def take_piece(self): 
+        for sprite in pieces.sprites():
+            if sprite != self and self.rect.colliderect(sprite.rect) and not self.piece_selected:
+                if sprite.color != self.color:
+                    sprite.kill()
+                else:
+                    self.rect.center = self.piece_pos
     
-    if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_click:
-      self.mouse_click = True
-      self.piece_selected = True
-    
-    if self.mouse_buttons[0] and self.piece_selected and not self.mouse_click:
-      self.y = ((self.mouse_pos[0] // 100) * 100) + 50
-      self.x = ((self.mouse_pos[1] // 100) * 100) + 50
-      self.rect.center = (self.y, self.x) 
-      self.piece_selected = False
-      self.mouse_click = True
+    def update(self):
+        self.move()
+        self.highlight_piece()
+        self.take_piece()
 
-    if not self.mouse_buttons[0]:
-      self.mouse_click = False
-    
-  def highlight_piece(self):
-    if self.piece_selected:
-      pygame.draw.rect(screen, "Green", self.rect, 3)
+class pawn(ChessPiece):
+    def __init__(self, pos, color):
+        image_path = "images/pieces/blackPawn.png" if color == "black" else "images/pieces/whitePawn.png"
+        super().__init__(pos, color, image_path)
 
-  def take_piece(self): 
-    for sprite in pieces.sprites():
-      if sprite != self and self.rect.colliderect(sprite.rect) and not self.piece_selected:
-        if sprite.color != self.color:
-          sprite.kill()
-        else:
-          self.rect.center = self.piece_pos
+class knight(ChessPiece):
+    def __init__(self, pos, color):
+        image_path = "images/pieces/blackKnight.png" if color == "black" else "images/pieces/whiteKnight.png"
+        super().__init__(pos, color, image_path)
 
-  def update(self):
-    self.move()
-    self.highlight_piece()
-    self.take_piece()
+class bishop(ChessPiece):
+    def __init__(self, pos, color):
+        image_path = "images/pieces/blackBishop.png" if color == "black" else "images/pieces/whiteBishop.png"
+        super().__init__(pos, color, image_path)
 
-class knight(pygame.sprite.Sprite):
-  
-  def __init__(self, pos, color):
-    super().__init__()
-    
-    self.color = color
+class rook(ChessPiece):
+    def __init__(self, pos, color):
+        image_path = "images/pieces/blackRook.png" if color == "black" else "images/pieces/whiteRook.png"
+        super().__init__(pos, color, image_path)
 
-    if self.color == "black":
-      self.image_orig = pygame.image.load("images/pieces/blackKnight.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-    
-    elif self.color == "white":
-      self.image_orig = pygame.image.load("images/pieces/whiteKnight.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
+class queen(ChessPiece):
+    def __init__(self, pos, color):
+        image_path = "images/pieces/blackQueen.png" if color == "black" else "images/pieces/whiteQueen.png"
+        super().__init__(pos, color, image_path)
 
-    self.mouse_click = False
-    self.piece_selected = False
-  
-  def move(self):
-    self.mouse_pos = pygame.mouse.get_pos()
-    self.mouse_buttons = pygame.mouse.get_pressed()
-    self.piece_pos = self.rect.center
-   
-    if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_click:
-      self.mouse_click = True
-      self.piece_selected = True
-    
-    if self.mouse_buttons[0] and self.piece_selected and not self.mouse_click:
-      self.y = ((self.mouse_pos[0] // 100) * 100) + 50
-      self.x = ((self.mouse_pos[1] // 100) * 100) + 50
-      self.rect.center = (self.y, self.x)
-      self.piece_selected = False
-      self.mouse_click = True
-
-    if not self.mouse_buttons[0]:
-      self.mouse_click = False
-  
-  def highlight_piece(self):
-    if self.piece_selected:
-      pygame.draw.rect(screen, "Green", self.rect, 3)
-
-  def take_piece(self): 
-    for sprite in pieces.sprites():
-      if sprite != self and self.rect.colliderect(sprite.rect) and not self.piece_selected:
-        if sprite.color != self.color:
-          sprite.kill()
-        else:
-          self.rect.center = self.piece_pos
-
-  def update(self):
-    self.move()
-    self.highlight_piece()
-    self.take_piece()
-
-class bishop(pygame.sprite.Sprite):
-
-  def __init__(self, pos, color):
-    super().__init__()
-
-    self.color = color
-    
-    if self.color == "black":
-      self.image_orig = pygame.image.load("images/pieces/blackBishop.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-    
-    elif self.color == "white":
-      self.image_orig = pygame.image.load("images/pieces/whiteBishop.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-
-    self.mouse_click = False
-    self.piece_selected = False
-  
-  def move(self):
-    self.mouse_pos = pygame.mouse.get_pos()
-    self.mouse_buttons = pygame.mouse.get_pressed()
-    self.piece_pos = self.rect.center
-    
-    if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_click:
-      self.mouse_click = True
-      self.piece_selected = True
-    
-    if self.mouse_buttons[0] and self.piece_selected and not self.mouse_click:
-      self.y = ((self.mouse_pos[0] // 100) * 100) + 50
-      self.x = ((self.mouse_pos[1] // 100) * 100) + 50
-      self.rect.center = (self.y, self.x)
-      self.piece_selected = False
-      self.mouse_click = True
-
-    if not self.mouse_buttons[0]:
-      self.mouse_click = False
-  
-  def highlight_piece(self):
-    if self.piece_selected:
-      pygame.draw.rect(screen, "Green", self.rect, 3)
-  
-  def take_piece(self): 
-    for sprite in pieces.sprites():
-      if sprite != self and self.rect.colliderect(sprite.rect) and not self.piece_selected:
-        if sprite.color != self.color:
-          sprite.kill()
-        else:
-          self.rect.center = self.piece_pos
-
-  def update(self):
-    self.move()
-    self.highlight_piece()
-    self.take_piece()
-
-class rook(pygame.sprite.Sprite):
-
-  def __init__(self, pos, color):
-    super().__init__()
-
-    self.color = color
-    
-    if color == "black":
-      self.image_orig = pygame.image.load("images/pieces/blackRook.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-  
-    elif color == "white":
-      self.image_orig = pygame.image.load("images/pieces/whiteRook.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-
-    self.mouse_click = False
-    self.piece_selected = False
-  
-  def move(self):
-    self.mouse_pos = pygame.mouse.get_pos()
-    self.mouse_buttons = pygame.mouse.get_pressed()
-    self.piece_pos = self.rect.center
-    
-    if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_click:
-      self.mouse_click = True
-      self.piece_selected = True
-    
-    if self.mouse_buttons[0] and self.piece_selected and not self.mouse_click:
-      self.y = ((self.mouse_pos[0] // 100) * 100) + 50
-      self.x = ((self.mouse_pos[1] // 100) * 100) + 50
-      self.rect.center = (self.y, self.x)
-      self.piece_selected = False
-      self.mouse_click = True
-
-    if not self.mouse_buttons[0]:
-      self.mouse_click = False
-
-  def highlight_piece(self):
-    if self.piece_selected:
-      pygame.draw.rect(screen, "Green", self.rect, 3)
-  
-  def take_piece(self): 
-    for sprite in pieces.sprites():
-      if sprite != self and self.rect.colliderect(sprite.rect) and not self.piece_selected:
-        if sprite.color != self.color:
-          sprite.kill()
-        else:
-          self.rect.center = self.piece_pos
-
-  def update(self):
-    self.move()
-    self.highlight_piece()  
-    self.take_piece()
-
-class queen(pygame.sprite.Sprite):
-
-  def __init__(self, pos, color):
-    super().__init__()
-
-    self.color = color
-    
-    if self.color == "black":
-      self.image_orig = pygame.image.load("images/pieces/blackQueen.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.45)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-    
-    elif self.color == "white":
-      self.image_orig = pygame.image.load("images/pieces/whiteQueen.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.45)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-
-    self.mouse_click = False
-    self.piece_selected = False
-  
-  def move(self):
-    self.mouse_pos = pygame.mouse.get_pos()
-    self.mouse_buttons = pygame.mouse.get_pressed()
-    self.piece_pos = self.rect.center
-    
-    if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_click:
-      self.mouse_click = True
-      self.piece_selected = True
-    
-    if self.mouse_buttons[0] and self.piece_selected and not self.mouse_click:
-      self.y = ((self.mouse_pos[0] // 100) * 100) + 50
-      self.x = ((self.mouse_pos[1] // 100) * 100) + 50
-      self.rect.center = (self.y, self.x)
-      self.piece_selected = False
-      self.mouse_click = True
-
-    if not self.mouse_buttons[0]:
-      self.mouse_click = False
-
-  def highlight_piece(self):
-    if self.piece_selected:
-      pygame.draw.rect(screen, "Green", self.rect, 3)
-
-  def take_piece(self): 
-    for sprite in pieces.sprites():
-      if sprite != self and self.rect.colliderect(sprite.rect) and not self.piece_selected:
-        if sprite.color != self.color:
-          sprite.kill()
-        else:
-          self.rect.center = self.piece_pos
-
-  def update(self):
-    self.move()
-    self.highlight_piece()
-    self.take_piece()
-
-class king(pygame.sprite.Sprite):
-
-  def __init__(self, pos, color):
-    super().__init__()
-
-    self.color = color
-    
-    if self.color == "black":
-      self.image_orig = pygame.image.load("images/pieces/blackKing.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.45)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-    
-    elif self.color == "white":
-      self.image_orig = pygame.image.load("images/pieces/whiteKing.png").convert_alpha()
-      self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.45)))
-      self.rect = self.image.get_rect()
-      self.rect.center = pos
-
-    self.mouse_click = False
-    self.piece_selected = False
-  
-  def move(self):
-    self.mouse_pos = pygame.mouse.get_pos()
-    self.mouse_buttons = pygame.mouse.get_pressed()
-    self.piece_pos = self.rect.center
-    
-    if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_click:
-      self.mouse_click = True
-      self.piece_selected = True
-    
-    if self.mouse_buttons[0] and self.piece_selected and not self.mouse_click:
-      self.y = ((self.mouse_pos[0] // 100) * 100) + 50
-      self.x = ((self.mouse_pos[1] // 100) * 100) + 50
-      self.rect.center = (self.y, self.x)
-      self.piece_selected = False
-      self.mouse_click = True
-
-    if not self.mouse_buttons[0]:
-      self.mouse_click = False
-  
-  def highlight_piece(self):
-    if self.piece_selected:
-      pygame.draw.rect(screen, "Green", self.rect, 3)
-
-  def take_piece(self): 
-    for sprite in pieces.sprites():
-      if sprite != self and self.rect.colliderect(sprite.rect) and not self.piece_selected:
-        if sprite.color != self.color:
-          sprite.kill()
-        else:
-          self.rect.center = self.piece_pos
-
-  def update(self):
-    self.move()
-    self.highlight_piece()
-    self.take_piece()
+class king(ChessPiece):
+    def __init__(self, pos, color):
+        image_path = "images/pieces/blackKing.png" if color == "black" else "images/pieces/whiteKing.png"
+        super().__init__(pos, color, image_path)
 
 # Group
 pieces = pygame.sprite.Group()
