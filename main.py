@@ -53,7 +53,7 @@ class ChessPiece(pygame.sprite.Sprite):
   
   def highlight_piece(self):
     if self.piece_selected:
-      pygame.draw.rect(screen, (255, 0, 0), self.rect, 3)
+      pygame.draw.rect(screen, (0, 150, 0), self.rect, 3)
       self.piece_previous_pos = self.rect.center
       self.piece_previous_pos_xy = (self.rect.left, self.rect.top)
     elif self.rect.center != self.piece_previous_pos:
