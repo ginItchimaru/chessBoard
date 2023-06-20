@@ -4,7 +4,7 @@ import pygame
 from sys import exit
 
 pygame.init() # initializing the pygame module
-screen = pygame.display.set_mode((800, 800)) # screen size
+screen = pygame.display.set_mode((800, 850)) # screen size
 pygame.display.set_caption("Chess") # Game name
 clock = pygame.time.Clock() # frame rate
 
@@ -24,11 +24,11 @@ class ChessPiece(pygame.sprite.Sprite):
     self.image = pygame.transform.scale(self.image_orig, (int(self.image_orig.get_width() * 0.5), int(self.image_orig.get_height() * 0.5)))
     self.rect = self.image.get_rect()
     self.rect.center = pos
-    
+    self.font = pygame.font.Font("fonts/ubuntuFont/Ubuntu-Bold.ttf", 20)
     self.mouse_click = False
     self.piece_selected = False
-    self.piece_previous_pos = self.rect.center
-    self.piece_previous_pos_xy = (self.rect.left, self.rect.top)
+    self.previous_pos = self.rect.center
+    self.previous_pos_xy = (self.rect.left, self.rect.top)
 
  
   def move(self):
@@ -41,24 +41,48 @@ class ChessPiece(pygame.sprite.Sprite):
       self.piece_selected = True
     
     if self.mouse_buttons[0] and self.piece_selected and not self.mouse_click:
-      self.y = ((self.mouse_pos[0] // 100) * 100) + 50
-      self.x = ((self.mouse_pos[1] // 100) * 100) + 50
-      self.rect.center = (self.y, self.x)
       self.piece_selected = False
       self.mouse_click = True
+      if self.mouse_pos[1] < 800:
+        self.y = ((self.mouse_pos[0] // 100) * 100) + 50
+        self.x = ((self.mouse_pos[1] // 100) * 100) + 50
+        self.rect.center = (self.y, self.x)
     
     if not self.mouse_buttons[0]:
-      self.mouse_click = False
-    
+      self.mouse_click = False   
+  
   
   def highlight_piece(self):
     if self.piece_selected:
       pygame.draw.rect(screen, (0, 150, 0), self.rect, 3)
-      self.piece_previous_pos = self.rect.center
-      self.piece_previous_pos_xy = (self.rect.left, self.rect.top)
-    elif self.rect.center != self.piece_previous_pos:
+      self.previous_pos = self.rect.center
+      self.previous_pos_xy = (self.rect.left, self.rect.top)
+    
+    elif self.rect.center != self.previous_pos:
       pygame.draw.rect(screen, (0, 255, 0), self.rect, 3)
-      pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(self.piece_previous_pos_xy, self.rect.size), 3)
+      pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(self.previous_pos_xy, self.rect.size), 3)
+
+  
+  def write_move(self):
+    def get_position_output(position):
+      file_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+      rank_names = ['8', '7', '6', '5', '4', '3', '2', '1']
+      file_index = (position[0] - 50) // 100
+      rank_index = (750 - position[1]) // 100
+      return file_names[file_index] + rank_names[rank_index]
+
+    if self.rect.center != self.previous_pos:
+      self.prev_pos_output = get_position_output(self.previous_pos)
+      self.cur_pos_output = get_position_output(self.rect.center)
+      self.output = self.prev_pos_output + "  :  " + self.cur_pos_output
+      
+      if self.color == "white":
+        self.text_white = self.font.render(self.output, False, (255, 255, 255))
+        screen.blit(self.text_white, (15, 800))
+      else:
+        self.text_black = self.font.render(self.output, False, (0, 0, 0))
+        screen.blit(self.text_black, (15, 825))
+  
   
   def take_piece(self): 
     for sprite in pieces.sprites():
@@ -72,6 +96,7 @@ class ChessPiece(pygame.sprite.Sprite):
   def update(self):
     self.move()
     self.highlight_piece()
+    self.write_move()
     self.take_piece()
 
 class pawn(ChessPiece):
@@ -160,7 +185,7 @@ while True:
       pygame.quit() # closing the game
       exit() # exiting the while loop
   
-  # board
+  screen.fill((125, 150, 100))
   screen.blit(board_surface, (0, 0))
   pieces.draw(screen)
   pieces.update()
