@@ -61,27 +61,6 @@ class ChessPiece(pygame.sprite.Sprite):
     elif self.rect.center != self.previous_pos:
       pygame.draw.rect(screen, (0, 255, 0), self.rect, 3)
       pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(self.previous_pos_xy, self.rect.size), 3)
-
-  
-  def write_move(self):
-    def get_position_output(position):
-      file_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-      rank_names = ['8', '7', '6', '5', '4', '3', '2', '1']
-      file_index = (position[0] - 50) // 100
-      rank_index = (750 - position[1]) // 100
-      return file_names[file_index] + rank_names[rank_index]
-
-    if self.rect.center != self.previous_pos:
-      self.prev_pos_output = get_position_output(self.previous_pos)
-      self.cur_pos_output = get_position_output(self.rect.center)
-      self.output = self.prev_pos_output + "  :  " + self.cur_pos_output
-      
-      if self.color == "white":
-        self.text_white = self.font.render(self.output, False, (255, 255, 255))
-        screen.blit(self.text_white, (15, 800))
-      else:
-        self.text_black = self.font.render(self.output, False, (0, 0, 0))
-        screen.blit(self.text_black, (15, 825))
   
   
   def take_piece(self): 
@@ -96,7 +75,6 @@ class ChessPiece(pygame.sprite.Sprite):
   def update(self):
     self.move()
     self.highlight_piece()
-    self.write_move()
     self.take_piece()
 
 class pawn(ChessPiece):
