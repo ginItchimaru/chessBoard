@@ -25,7 +25,8 @@ class ChessPiece(pygame.sprite.Sprite):
     self.rect = self.image.get_rect()
     self.rect.center = pos
     self.font = pygame.font.Font("fonts/ubuntuFont/Ubuntu-Bold.ttf", 20)
-    self.mouse_click = False
+    self.mouse_left_click = False
+    self.mouse_right_click = False
     self.piece_selected = False
     self.previous_pos = self.rect.center
     self.previous_pos_xy = (self.rect.left, self.rect.top)
@@ -36,20 +37,27 @@ class ChessPiece(pygame.sprite.Sprite):
     self.mouse_buttons = pygame.mouse.get_pressed()
     self.piece_pos = self.rect.center # for the take_piece function
     
-    if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_click:
-      self.mouse_click = True
+    if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_left_click:
+      self.mouse_left_click = True
       self.piece_selected = True
     
-    if self.mouse_buttons[0] and self.piece_selected and not self.mouse_click:
+    if self.mouse_buttons[0] and self.piece_selected and not self.mouse_left_click:
       self.piece_selected = False
-      self.mouse_click = True
+      self.mouse_left_click = True
       if self.mouse_pos[1] < 800:
         self.y = ((self.mouse_pos[0] // 100) * 100) + 50
         self.x = ((self.mouse_pos[1] // 100) * 100) + 50
         self.rect.center = (self.y, self.x)
     
+    if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[2] and not self.mouse_right_click:
+      self.piece_selected = False
+      self.mouse_right_click = True
+
+    if not self.mouse_buttons[2]:
+      self.mouse_right_click = False
+    
     if not self.mouse_buttons[0]:
-      self.mouse_click = False   
+      self.mouse_left_click = False   
   
   
   def highlight_piece(self):
