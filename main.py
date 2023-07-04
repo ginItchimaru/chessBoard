@@ -16,7 +16,10 @@ board_size = (board_width, board_height)
 board_surface = pygame.transform.scale(board_surface, board_size)
 
 # classes
+glob_piece_selected = False
+glob_last_moved = None
 class ChessPiece(pygame.sprite.Sprite):
+  
   def __init__(self, pos, color, image_path):
     super().__init__()
     self.color = color
@@ -36,18 +39,24 @@ class ChessPiece(pygame.sprite.Sprite):
     self.mouse_pos = pygame.mouse.get_pos()
     self.mouse_buttons = pygame.mouse.get_pressed()
     self.piece_pos = self.rect.center # for the take_piece function
+    global glob_piece_selected
+    global glob_last_moved
     
     if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_left_click:
       self.mouse_left_click = True
       self.piece_selected = True
+      glob_piece_selected = True
     
     if self.mouse_buttons[0] and self.piece_selected and not self.mouse_left_click:
       self.piece_selected = False
+      glob_piece_selected = False
       self.mouse_left_click = True
+
       if self.mouse_pos[1] < 800:
         self.y = ((self.mouse_pos[0] // 100) * 100) + 50
         self.x = ((self.mouse_pos[1] // 100) * 100) + 50
         self.rect.center = (self.y, self.x)
+        glob_last_moved = self
     
     if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[2] and not self.mouse_right_click:
       self.piece_selected = False
@@ -61,12 +70,16 @@ class ChessPiece(pygame.sprite.Sprite):
   
   
   def highlight_piece(self):
+    global glob_piece_selected
+    global glob_last_moved
+
     if self.piece_selected:
       pygame.draw.rect(screen, (0, 150, 0), self.rect, 3)
       self.previous_pos = self.rect.center
       self.previous_pos_xy = (self.rect.left, self.rect.top)
     
-    elif self.rect.center != self.previous_pos:
+    elif self.rect.center != self.previous_pos and not glob_piece_selected and (
+            self == glob_last_moved):
       pygame.draw.rect(screen, (0, 255, 0), self.rect, 3)
       pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(self.previous_pos_xy, self.rect.size), 3)
   
