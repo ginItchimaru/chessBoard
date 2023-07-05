@@ -18,6 +18,7 @@ board_surface = pygame.transform.scale(board_surface, board_size)
 # classes
 glob_piece_selected = False
 glob_last_moved = None
+
 class ChessPiece(pygame.sprite.Sprite):
   
   def __init__(self, pos, color, image_path):
@@ -31,6 +32,7 @@ class ChessPiece(pygame.sprite.Sprite):
     self.mouse_left_click = False
     self.mouse_right_click = False
     self.piece_selected = False
+    self.piece_moved = False
     self.previous_pos = self.rect.center
     self.previous_pos_xy = (self.rect.left, self.rect.top)
 
@@ -56,6 +58,7 @@ class ChessPiece(pygame.sprite.Sprite):
         self.y = ((self.mouse_pos[0] // 100) * 100) + 50
         self.x = ((self.mouse_pos[1] // 100) * 100) + 50
         self.rect.center = (self.y, self.x)
+        self.piece_moved = True
         glob_last_moved = self
     
     if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[2] and not self.mouse_right_click:
@@ -91,12 +94,50 @@ class ChessPiece(pygame.sprite.Sprite):
           sprite.kill()
         else:
           self.rect.center = self.piece_pos
+
+
+  def write_move(self):
     
+    def get_position_output(position):
+      x_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+      y_names = ['8', '7', '6', '5', '4', '3', '2', '1']
+      x_index = (position[0] - 50) // 100
+      y_index = (position[1] - 50) // 100
+      return x_names[x_index] + y_names[y_index]
+
+    self.prev_pos_output = get_position_output(self.previous_pos)
+    self.cur_pos_output = get_position_output(self.rect.center)
+    self.output = self.prev_pos_output + "  :  " + self.cur_pos_output
+    
+    self.text_white = self.font.render(self.output, False, (255, 255, 255))
+    self.text_white_background = pygame.Surface((self.text_white.get_width(), self.text_white.get_height()))
+    self.text_black = self.font.render(self.output, False, (0, 0, 0))
+    self.text_black_background = pygame.Surface((self.text_black.get_width(), self.text_black.get_height()))
   
+    if self.piece_moved:
+      
+      if self.color == "white":
+        self.text_white_background.fill((125, 150, 100))
+        screen.blit(self.text_white_background, (15, 800))
+        screen.blit(self.text_white, (15, 800))
+      else:
+        self.text_black_background.fill((125, 150, 100))
+        screen.blit(self.text_black_background, (15, 800))
+        screen.blit(self.text_black, (15, 800))
+      
+    if self.piece_selected:
+      self.piece_moved = False
+
+
   def update(self):
+    global glob_last_moved
+
     self.move()
     self.highlight_piece()
+    if glob_last_moved == self:
+      self.write_move()
     self.take_piece()
+
 
 class pawn(ChessPiece):
   def __init__(self, pos, color):
