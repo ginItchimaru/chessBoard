@@ -41,17 +41,14 @@ class ChessPiece(pygame.sprite.Sprite):
     self.mouse_pos = pygame.mouse.get_pos()
     self.mouse_buttons = pygame.mouse.get_pressed()
     self.piece_pos = self.rect.center # for the take_piece function
-    global glob_piece_selected
     global glob_last_moved
     
     if self.rect.collidepoint(self.mouse_pos) and self.mouse_buttons[0] and not self.mouse_left_click:
       self.mouse_left_click = True
       self.piece_selected = True
-      glob_piece_selected = True
     
     if self.mouse_buttons[0] and self.piece_selected and not self.mouse_left_click:
       self.piece_selected = False
-      glob_piece_selected = False
       self.mouse_left_click = True
 
       if self.mouse_pos[1] < 800:
@@ -73,7 +70,6 @@ class ChessPiece(pygame.sprite.Sprite):
   
   
   def highlight_piece(self):
-    global glob_piece_selected
     global glob_last_moved
 
     if self.piece_selected:
@@ -81,19 +77,9 @@ class ChessPiece(pygame.sprite.Sprite):
       self.previous_pos = self.rect.center
       self.previous_pos_xy = (self.rect.left, self.rect.top)
     
-    elif self.rect.center != self.previous_pos and not glob_piece_selected and (
-            self == glob_last_moved):
+    elif self.rect.center != self.previous_pos and not glob_piece_selected and self == glob_last_moved:
       pygame.draw.rect(screen, (0, 255, 0), self.rect, 3)
       pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(self.previous_pos_xy, self.rect.size), 3)
-  
-  
-  def take_piece(self): 
-    for sprite in pieces.sprites():
-      if sprite != self and self.rect.colliderect(sprite.rect) and not self.piece_selected:
-        if sprite.color != self.color:
-          sprite.kill()
-        else:
-          self.rect.center = self.piece_pos
 
 
   def write_move(self):
@@ -127,6 +113,15 @@ class ChessPiece(pygame.sprite.Sprite):
       
     if self.piece_selected:
       self.piece_moved = False
+
+  
+  def take_piece(self): 
+    for sprite in pieces.sprites():
+      if sprite != self and self.rect.colliderect(sprite.rect) and not self.piece_selected:
+        if sprite.color != self.color:
+          sprite.kill()
+        else:
+          self.rect.center = self.piece_pos
 
 
   def update(self):
