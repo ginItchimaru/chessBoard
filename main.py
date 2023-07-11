@@ -16,7 +16,6 @@ board_size = (board_width, board_height)
 board_surface = pygame.transform.scale(board_surface, board_size)
 
 # classes
-glob_piece_selected = False
 glob_last_moved = None
 
 class ChessPiece(pygame.sprite.Sprite):
@@ -77,7 +76,7 @@ class ChessPiece(pygame.sprite.Sprite):
       self.previous_pos = self.rect.center
       self.previous_pos_xy = (self.rect.left, self.rect.top)
     
-    elif self.rect.center != self.previous_pos and not glob_piece_selected and self == glob_last_moved:
+    elif self.rect.center != self.previous_pos and self == glob_last_moved:
       pygame.draw.rect(screen, (0, 255, 0), self.rect, 3)
       pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(self.previous_pos_xy, self.rect.size), 3)
 
